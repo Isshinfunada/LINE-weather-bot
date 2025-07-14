@@ -14,7 +14,8 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "@types/node-cron": "^3.0.0"
+    "@types/node-cron": "^3.0.0",
+    "bun-types": "^1.0.0"
   },
   "keywords": ["LINE", "bot", "weather", "MCP", "bun", "hono"],
   "author": "",

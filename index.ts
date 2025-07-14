@@ -1,32 +1,27 @@
-const express = require('express');
-const { Client } = require('@line/bot-sdk');
-const axios = require('axios');
-const cron = require('node-cron');
-require('dotenv').config();
+import { Hono } from 'hono';
+import { Client } from '@line/bot-sdk';
+import * as cron from 'node-cron';
 
-const app = express();
-const port = process.env.PORT || 3000;
+const app = new Hono();
 
-// LINE Bot設定
+// 環境変数
 const config = {
-  channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
-  channelSecret: process.env.LINE_CHANNEL_SECRET,
+  channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN!,
+  channelSecret: process.env.LINE_CHANNEL_SECRET!,
 };
 
 const client = new Client(config);
-
-// OpenWeatherMap API設定
-const WEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
+const WEATHER_API_KEY = process.env.OPENWEATHER_API_KEY!;
 const CITY = process.env.CITY || 'Tokyo';
-const TARGET_USER_ID = process.env.TARGET_USER_ID;
+const TARGET_USER_ID = process.env.TARGET_USER_ID!;
 
 // 天気情報を取得する関数
 async function getWeatherData() {
   try {
-    const response = await axios.get(
+    const response = await fetch(
       `https://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${WEATHER_API_KEY}&units=metric&lang=ja`
     );
-    return response.data;
+    return await response.json();
   } catch (error) {
     console.error('天気情報の取得に失敗しました:', error);
     return null;
@@ -34,7 +29,7 @@ async function getWeatherData() {
 }
 
 // 雨の日かどうかを判定する関数
-function isRainyDay(weatherData) {
+function isRainyDay(weatherData: any): boolean {
   if (!weatherData) return false;
   
   const weatherId = weatherData.weather[0].id;
@@ -45,7 +40,7 @@ function isRainyDay(weatherData) {
 }
 
 // 雨の日の通知を送信する関数
-async function sendRainNotification(weatherData) {
+async function sendRainNotification(weatherData: any) {
   if (!TARGET_USER_ID) {
     console.error('TARGET_USER_IDが設定されていません');
     return;
@@ -94,14 +89,10 @@ cron.schedule('0 7 * * *', checkWeatherAndNotify, {
 });
 
 // LINEからのメッセージを処理
-app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+app.post('/webhook', async (c) => {
   try {
-    const signature = req.headers['x-line-signature'];
-    const body = req.body.toString();
-    
-    // 署名検証（実際の運用では必要）
-    
-    const events = JSON.parse(body).events;
+    const body = await c.req.json();
+    const events = body.events;
     
     for (const event of events) {
       if (event.type === 'message' && event.message.type === 'text') {
@@ -126,75 +117,88 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
       }
     }
     
-    res.status(200).end();
+    return c.json({ message: 'ok' });
   } catch (error) {
     console.error('Webhook処理エラー:', error);
-    res.status(500).end();
+    return c.json({ error: 'Internal Server Error' }, 500);
   }
 });
 
-// サーバー起動
-app.listen(port, () => {
-  console.log(`LINE Weather Bot が起動しました (Port: ${port})`);
-  console.log('毎日朝7時に天気をチェックします');
-  
-  // 起動時に一度天気をチェック
-  checkWeatherAndNotify();
+// MCP APIエンドポイント
+app.get('/mcp/tools', (c) => {
+  return c.json({
+    name: 'line-weather-bot',
+    version: '1.0.0',
+    tools: [
+      {
+        name: 'check_weather',
+        description: '現在の天気を確認します',
+        inputSchema: {
+          type: 'object',
+          properties: {},
+          required: []
+        }
+      },
+      {
+        name: 'send_weather_notification',
+        description: '天気通知を手動で送信します',
+        inputSchema: {
+          type: 'object',
+          properties: {},
+          required: []
+        }
+      }
+    ]
+  });
 });
 
-// MCP サーバー機能
-const mcpServer = {
-  name: 'line-weather-bot',
-  version: '1.0.0',
-  tools: [
-    {
-      name: 'check_weather',
-      description: '現在の天気を確認します',
-      inputSchema: {
-        type: 'object',
-        properties: {},
-        required: []
-      }
-    },
-    {
-      name: 'send_weather_notification',
-      description: '天気通知を手動で送信します',
-      inputSchema: {
-        type: 'object',
-        properties: {},
-        required: []
-      }
-    }
-  ]
-};
-
 // MCP ツール実行
-async function handleMcpTool(toolName, args) {
+app.post('/mcp/execute', async (c) => {
+  const { toolName } = await c.req.json();
+  
   switch (toolName) {
     case 'check_weather':
       const weatherData = await getWeatherData();
       if (weatherData) {
         const isRainy = isRainyDay(weatherData);
-        return {
+        return c.json({
           success: true,
           data: {
             weather: weatherData.weather[0].description,
             temperature: Math.round(weatherData.main.temp),
             isRainy: isRainy
           }
-        };
+        });
       }
-      return { success: false, error: '天気データの取得に失敗しました' };
+      return c.json({ success: false, error: '天気データの取得に失敗しました' });
       
     case 'send_weather_notification':
       const currentWeather = await getWeatherData();
       if (currentWeather && isRainyDay(currentWeather)) {
         await sendRainNotification(currentWeather);
-        return { success: true, message: '雨の日通知を送信しました' };
+        return c.json({ success: true, message: '雨の日通知を送信しました' });
       }
-      return { success: false, message: '雨の日ではないため通知を送信しませんでした' };
+      return c.json({ success: false, message: '雨の日ではないため通知を送信しませんでした' });
       
     default:
-      return { success: false, error: '不明なツールです' };
+      return c.json({ success: false, error: '不明なツールです' });
   }
-}
+});
+
+// ヘルスチェック
+app.get('/', (c) => {
+  return c.text('LINE Weather Bot is running! 🌧️');
+});
+
+const port = process.env.PORT || 3000;
+
+console.log(`LINE Weather Bot が起動しました (Port: ${port})`);
+console.log('毎日朝7時に天気をチェックします');
+
+// 起動時に一度天気をチェック
+checkWeatherAndNotify();
+
+export default {
+  port,
+  fetch: app.fetch,
+};

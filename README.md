@@ -1,6 +1,6 @@
 # LINE Weather Bot (MCP対応)
 
-雨の日だけLINEで通知してくれるお天気botです。MCPサーバー機能も搭載しています。
+雨の日だけLINEで通知してくれるお天気botです。Bun + Honoで実装され、MCPサーバー機能も搭載しています。
 
 ## 機能
 
@@ -37,17 +37,17 @@ TARGET_USER_ID=your_line_user_id
 
 1. 依存関係をインストール：
 ```bash
-npm install
+bun install
 ```
 
 2. 開発環境で起動：
 ```bash
-npm run dev
+bun run dev
 ```
 
 3. 本番環境で起動：
 ```bash
-npm start
+bun start
 ```
 
 ## 使用方法
@@ -65,12 +65,23 @@ Claudeから以下のツールを使用可能：
 - `check_weather`: 現在の天気を確認
 - `send_weather_notification`: 天気通知を手動送信
 
+MCP APIエンドポイント：
+- `GET /mcp/tools`: 利用可能なツール一覧
+- `POST /mcp/execute`: ツールを実行
+
 ## 雨の判定条件
 
 OpenWeatherMapの天気コードによる判定：
 - 200-299: 雷雨
 - 300-399: 霧雨
 - 500-599: 雨
+
+## 技術スタック
+
+- [Bun](https://bun.sh/) - 高速なJavaScriptランタイム
+- [Hono](https://hono.dev/) - 軽量なWebフレームワーク
+- [LINE Bot SDK](https://github.com/line/line-bot-sdk-nodejs) - LINE Bot開発用SDK
+- [node-cron](https://github.com/node-cron/node-cron) - スケジューリング
 
 ## デプロイ
 
