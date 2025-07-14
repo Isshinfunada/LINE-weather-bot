@@ -1,6 +1,6 @@
 # LINE Weather Bot (MCP対応)
 
-雨の日だけLINEで通知してくれるお天気botです。Bun + Honoで実装され、MCPサーバー機能も搭載しています。
+雨の日だけLINEで通知してくれるお天気botです。Bun + Honoで実装され、LINE公式のMCPサーバー（`@line/line-bot-mcp-server`）を活用しています。
 
 ## 機能
 
@@ -35,19 +35,31 @@ TARGET_USER_ID=your_line_user_id
 
 ## セットアップ
 
-1. 依存関係をインストール：
+### 1. 基本設定
+
 ```bash
+# 依存関係をインストール
 bun install
+
+# LINE MCPサーバーをグローバルインストール（オプション）
+npm install -g @line/line-bot-mcp-server
 ```
 
-2. 開発環境で起動：
+### 2. 実行方法
+
+#### 方法1: 統合型（推奨）
 ```bash
+# 通常のindex.tsを実行
 bun run dev
 ```
 
-3. 本番環境で起動：
+#### 方法2: LINE MCPサーバー連携型
 ```bash
-bun start
+# 1. LINE MCPサーバーを起動（別ターミナル）
+npx @line/line-bot-mcp-server
+
+# 2. Weather Botを起動
+bun run index-mcp.ts
 ```
 
 ## 使用方法
@@ -58,16 +70,37 @@ bun start
 - 「天気」と送信すると現在の天気を確認可能
 - 毎日朝7時に雨の日だけ自動通知
 
-### MCP Server
+### MCP Server連携
 
-Claudeから以下のツールを使用可能：
+#### LINE公式MCPサーバーの使用
 
-- `check_weather`: 現在の天気を確認
-- `send_weather_notification`: 天気通知を手動送信
+このプロジェクトはLINE公式の`@line/line-bot-mcp-server`を活用しています。
 
-MCP APIエンドポイント：
-- `GET /mcp/tools`: 利用可能なツール一覧
-- `POST /mcp/execute`: ツールを実行
+**利用可能なツール：**
+- `push_message`: テキストメッセージを送信
+- `push_flex_message`: Flexメッセージを送信
+- `broadcast_message`: 全フォロワーにブロードキャスト
+- `get_profile`: ユーザープロファイル取得
+- `get_quota_consumption`: メッセージクォータ確認
+
+#### MCPサーバーの設定
+
+`mcp-config.json`をClaude Desktopに追加：
+
+```json
+{
+  "mcpServers": {
+    "line-bot": {
+      "command": "npx",
+      "args": ["@line/line-bot-mcp-server"],
+      "env": {
+        "CHANNEL_ACCESS_TOKEN": "YOUR_TOKEN",
+        "DESTINATION_USER_ID": "YOUR_USER_ID"
+      }
+    }
+  }
+}
+```
 
 ## 雨の判定条件
 
@@ -80,8 +113,10 @@ OpenWeatherMapの天気コードによる判定：
 
 - [Bun](https://bun.sh/) - 高速なJavaScriptランタイム
 - [Hono](https://hono.dev/) - 軽量なWebフレームワーク
+- [@line/line-bot-mcp-server](https://github.com/line/line-bot-mcp-server) - LINE公式MCPサーバー
 - [LINE Bot SDK](https://github.com/line/line-bot-sdk-nodejs) - LINE Bot開発用SDK
 - [node-cron](https://github.com/node-cron/node-cron) - スケジューリング
+- [OpenWeatherMap API](https://openweathermap.org/api) - 天気情報API
 
 ## デプロイ
 
