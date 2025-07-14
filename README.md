@@ -27,6 +27,10 @@ Weather Bot (Bun + Hono)
 3. チャンネルアクセストークンを取得
 4. 送信先のユーザーIDを取得
 
+📖 **詳細ガイド**: 
+- [LINE_SETUP_GUIDE.md](./LINE_SETUP_GUIDE.md) - LINE公式アカウント開設の完全ガイド
+- [GET_USER_ID.md](./GET_USER_ID.md) - User ID取得方法
+
 ### 2. OpenWeatherMap APIキーの取得
 
 1. [OpenWeatherMap](https://openweathermap.org/api)でアカウント作成
