@@ -1,0 +1,22 @@
+{
+  "name": "line-weather-bot",
+  "version": "1.0.0",
+  "description": "LINE MCP Weather Bot that notifies about rainy days (Bun + Hono)",
+  "main": "index.ts",
+  "scripts": {
+    "start": "bun run index.ts",
+    "dev": "bun run --watch index.ts"
+  },
+  "dependencies": {
+    "@line/bot-sdk": "^8.0.0",
+    "hono": "^4.0.0",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/node-cron": "^3.0.0"
+  },
+  "keywords": ["LINE", "bot", "weather", "MCP", "bun", "hono"],
+  "author": "",
+  "license": "ISC"
+}
