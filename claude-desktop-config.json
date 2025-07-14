@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "line-weather-bot": {
+      "command": "npx",
+      "args": ["@line/line-bot-mcp-server"],
+      "env": {
+        "CHANNEL_ACCESS_TOKEN": "YOUR_LINE_CHANNEL_ACCESS_TOKEN_HERE",
+        "DESTINATION_USER_ID": "YOUR_LINE_USER_ID_HERE"
+      }
+    }
+  }
+}
