@@ -5,11 +5,16 @@
   "main": "index.ts",
   "scripts": {
     "start": "bun run index.ts",
-    "dev": "bun run --watch index.ts"
+    "dev": "bun run --watch index.ts",
+    "vercel-dev": "vercel dev",
+    "deploy": "vercel --prod"
   },
   "dependencies": {
     "hono": "^4.0.0",
     "node-cron": "^3.0.3"
+  },
+  "optionalDependencies": {
+    "@line/line-bot-mcp-server": "^0.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
